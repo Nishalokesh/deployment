@@ -5,7 +5,7 @@ import joblib
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)
+CORS(app,origins=['https://frontdeployment.netlify.app'])
 
 # Load trained model and scaler
 rf_model = joblib.load("cloudburst_rf_model.pkl")
