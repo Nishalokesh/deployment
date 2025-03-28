@@ -17,7 +17,7 @@ export default function CloudburstApp() {
     setError(null); // Clear previous errors
 
     try {
-      const response = await axios.get('https://cloudburst-q09n.onrender.com/predict');
+      const response = await axios.get('https://cloudburst-q09n.onrender.com/predict?city=${city}');
       setPrediction(response.data);
     } catch (error) {
       setError("Failed to fetch prediction. Please try again.");
