@@ -8,30 +8,36 @@ from datetime import datetime, timezone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+import os
+from urllib.parse import urlparse
 
 # API & Database Credentials
 OWM_API_KEY = "2c97b54a95dfe0a037bd517c8aec46b1"
 GEONAMES_USERNAME = "nisha_l"
 
-DB_HOST = "localhost"
-DB_NAME = "postgres"
-DB_USER = "postgres"
-DB_PASSWORD = "Nisha@84"
+# Database Configuration (Using Render DB)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://cloudburst_db_user:MWzRywc74qezZFfvbOdvViBn2ytb6MXV@dpg-cvj5vnuuk2gs73b26sv0-a/cloudburst_db")
+
+db_url = urlparse(DATABASE_URL)
+
+DB_CONFIG = {
+    "dbname": db_url.path[1:],  
+    "user": db_url.username,
+    "password": db_url.password,
+    "host": db_url.hostname,
+    "port": db_url.port,
+    "sslmode": "require"
+}
 
 COUNTRY_CODE = "IN"
 
 # Connect to PostgreSQL
 def connect_db():
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
-        )
+        conn = psycopg2.connect(**DB_CONFIG)
         return conn
     except Exception as e:
-        print(f" Database Connection Error: {e}")
+        print(f"Database Connection Error: {e}")
         return None
 
 # Get cities from API
@@ -236,7 +242,7 @@ def process_weather_data_rf():
         time.sleep(1)  # Prevent API rate limits
 
     conn.close()
-    print("Weather data processing & prediction (RF) completed!")
+    print("Weather data processing & prediction completed!")
 
 
 # Run the script
