@@ -31,9 +31,9 @@ DB_CONFIG = {
 
 def connect_db():
    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        return conn
-    except Exception as e:
+       conn = psycopg2.connect(**DB_CONFIG)
+       return conn
+   except Exception as e:
         print(f"Database Connection Error: {e}")
         return None
 
