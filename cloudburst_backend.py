@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
@@ -104,6 +103,14 @@ def connect_db():
         print(f"Database Connection Error: {e}")
         return None
 
+def test_db_connection():
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        print("✅ Database connected successfully!")
+        conn.close()
+    except Exception as e:
+        print(f"❌ Database Connection Error: {e}")
+
 @app.route("/")
 def home():
     return "Cloudburst Prediction API is running!"
@@ -151,4 +158,6 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    test_db_connection()
+    fetch_table_data("weather")
     app.run(debug=True)
