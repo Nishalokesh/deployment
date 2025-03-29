@@ -1,4 +1,5 @@
-import requests
+from flask import Flask, request, jsonify
+from flask_cors import CORSimport requests
 import psycopg2
 import psycopg2.extras
 import numpy as np
@@ -10,6 +11,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 import os
 from urllib.parse import urlparse
+
+app = Flask(__name__)
+CORS(app,origins=["https://frontdeployment.netlify.app"])
 
 # API & Database Credentials
 OWM_API_KEY = "2c97b54a95dfe0a037bd517c8aec46b1"
@@ -39,7 +43,73 @@ def connect_db():
     except Exception as e:
         print(f"Database Connection Error: {e}")
         return None
+def create_tables():
+    """Creates necessary tables if they don't exist."""
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
 
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS weather (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            city VARCHAR(100) NOT NULL,
+            temperature FLOAT NOT NULL,
+            humidity FLOAT NOT NULL,
+            pressure FLOAT NOT NULL,
+            wind_speed FLOAT NOT NULL,
+            cloudiness INT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS cities (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) UNIQUE NOT NULL,
+            latitude FLOAT NOT NULL,
+            longitude FLOAT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS risk_predictions (
+            id SERIAL PRIMARY KEY,
+            city VARCHAR(100) NOT NULL,
+            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            risk_level VARCHAR(50) NOT NULL,
+            prediction_score FLOAT NOT NULL
+        );
+        """
+        
+        cur.execute(create_table_query)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database tables are set up correctly.")
+    
+    except Exception as e:
+        print(f" Error creating tables: {e}")
+
+# Ensure tables are created at startup
+create_tables()
+
+def fetch_table_data(table_name):
+    conn = connect_db()
+    if not conn:
+        print("Database connection failed.")
+        return
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT * FROM {table_name} LIMIT 10;")  # Fetch first 10 rows
+            rows = cur.fetchall()
+
+            # Print column names
+            colnames = [desc[0] for desc in cur.description]
+            print(f"\nData from {table_name}:")
+            print(colnames)
+            for row in rows:
+                print(row)
+
+    except Exception as e:
+        print(f"Error fetching data from {table_name}: {e}")
+    finally:
+        conn.close()
 # Get cities from API
 def get_cities_in_country(country_code):
     url = f"http://api.geonames.org/searchJSON?country={country_code}&featureClass=P&maxRows=50&username={GEONAMES_USERNAME}"
@@ -250,3 +320,5 @@ if __name__ == "__main__":
     load_weather_data()  # Step 1: Collect & Store Weather Data
     train_rf_model()  # Step 2: Train RF Model
     process_weather_data_rf()  # Step 3: Cloudburst risk analysis using RF
+    test_db_connection()
+    fetch_table_data("weather")
