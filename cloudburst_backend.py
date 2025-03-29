@@ -28,73 +28,7 @@ DB_CONFIG = {
     "port": db_url.port,
     "sslmode": "require"  # Important for Render DB
 }
-def create_tables():
-    """Creates necessary tables if they don't exist."""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
 
-        create_table_query = """
-        CREATE TABLE IF NOT EXISTS weather (
-            id SERIAL PRIMARY KEY,
-            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            city VARCHAR(100) NOT NULL,
-            temperature FLOAT NOT NULL,
-            humidity FLOAT NOT NULL,
-            pressure FLOAT NOT NULL,
-            wind_speed FLOAT NOT NULL,
-            cloudiness INT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS cities (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(100) UNIQUE NOT NULL,
-            latitude FLOAT NOT NULL,
-            longitude FLOAT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS risk_predictions (
-            id SERIAL PRIMARY KEY,
-            city VARCHAR(100) NOT NULL,
-            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            risk_level VARCHAR(50) NOT NULL,
-            prediction_score FLOAT NOT NULL
-        );
-        """
-        
-        cur.execute(create_table_query)
-        conn.commit()
-        cur.close()
-        conn.close()
-        print("Database tables are set up correctly.")
-    
-    except Exception as e:
-        print(f" Error creating tables: {e}")
-
-# Ensure tables are created at startup
-create_tables()
-
-def fetch_table_data(table_name):
-    conn = connect_db()
-    if not conn:
-        print("Database connection failed.")
-        return
-
-    try:
-        with conn.cursor() as cur:
-            cur.execute(f"SELECT * FROM {table_name} LIMIT 10;")  # Fetch first 10 rows
-            rows = cur.fetchall()
-
-            # Print column names
-            colnames = [desc[0] for desc in cur.description]
-            print(f"\nData from {table_name}:")
-            print(colnames)
-            for row in rows:
-                print(row)
-
-    except Exception as e:
-        print(f"Error fetching data from {table_name}: {e}")
-    finally:
-        conn.close()
 def connect_db():
    try:
        conn = psycopg2.connect(**DB_CONFIG)
@@ -106,10 +40,10 @@ def connect_db():
 def test_db_connection():
     try:
         conn = psycopg2.connect(**DB_CONFIG)
-        print("✅ Database connected successfully!")
+        print(" Database connected successfully!")
         conn.close()
     except Exception as e:
-        print(f"❌ Database Connection Error: {e}")
+        print(f" Database Connection Error: {e}")
 
 @app.route("/")
 def home():
@@ -158,6 +92,4 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    test_db_connection()
-    fetch_table_data("weather")
     app.run(debug=True)
