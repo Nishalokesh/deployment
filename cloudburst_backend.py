@@ -28,6 +28,44 @@ DB_CONFIG = {
     "port": db_url.port,
     "sslmode": "require"  # Important for Render DB
 }
+def create_tables():
+    """Creates necessary tables if they don't exist."""
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS weather (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            city VARCHAR(100) NOT NULL,
+            temperature FLOAT NOT NULL,
+            humidity FLOAT NOT NULL,
+            pressure FLOAT NOT NULL,
+            wind_speed FLOAT NOT NULL,
+            cloudiness INT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS risk_predictions (
+            id SERIAL PRIMARY KEY,
+            city VARCHAR(100) NOT NULL,
+            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            risk_level VARCHAR(50) NOT NULL,
+            prediction_score FLOAT NOT NULL
+        );
+        """
+        
+        cur.execute(create_table_query)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database tables are set up correctly.")
+    
+    except Exception as e:
+        print(f" Error creating tables: {e}")
+
+# Ensure tables are created at startup
+create_tables()
 
 def connect_db():
    try:
