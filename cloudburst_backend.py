@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
@@ -45,8 +46,7 @@ def create_tables():
             wind_speed FLOAT NOT NULL,
             cloudiness INT NOT NULL
         );
-        
-        CREATE TABLE cities (
+        CREATE TABLE IF NOT EXISTS cities (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) UNIQUE NOT NULL,
             latitude FLOAT NOT NULL,
@@ -74,6 +74,28 @@ def create_tables():
 # Ensure tables are created at startup
 create_tables()
 
+def fetch_table_data(table_name):
+    conn = connect_db()
+    if not conn:
+        print("Database connection failed.")
+        return
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT * FROM {table_name} LIMIT 10;")  # Fetch first 10 rows
+            rows = cur.fetchall()
+
+            # Print column names
+            colnames = [desc[0] for desc in cur.description]
+            print(f"\nData from {table_name}:")
+            print(colnames)
+            for row in rows:
+                print(row)
+
+    except Exception as e:
+        print(f"Error fetching data from {table_name}: {e}")
+    finally:
+        conn.close()
 def connect_db():
    try:
        conn = psycopg2.connect(**DB_CONFIG)
