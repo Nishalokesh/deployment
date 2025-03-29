@@ -45,6 +45,13 @@ def create_tables():
             wind_speed FLOAT NOT NULL,
             cloudiness INT NOT NULL
         );
+        
+        CREATE TABLE cities (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) UNIQUE NOT NULL,
+            latitude FLOAT NOT NULL,
+            longitude FLOAT NOT NULL
+        );
 
         CREATE TABLE IF NOT EXISTS risk_predictions (
             id SERIAL PRIMARY KEY,
